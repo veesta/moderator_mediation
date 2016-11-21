@@ -1,9 +1,9 @@
 library(tidyverse)
 library(apaTables)
 
-#read a table 
+#read a excel
 
-my_data <- read.table("Practicedata.csv",header=TRUE,sep=",",na.strings=c("NA"))
+my_data <- read_csv("Practicedata.csv")
 
 glimpse(my_data)
 
@@ -13,7 +13,10 @@ analytic.data <- my_data %>% select(Exam, Anxiety, Preparation)
 
 analytic.data <- na.omit(analytic.data)
 
+psych::pairs.panels(analytic.data)
 apa.cor.table(analytic.data)
+
+apa.cor.table(analytic.data, filename="Table1_Correlation.doc", table.number=1)
 
 #create mean centered versions of variables -> make the mean 0 
 #facilitates easy graph interpretation 
@@ -38,6 +41,8 @@ interaction.regression <- lm(Exam ~ x.centered + z.centered + I(x.centered*z.cen
 summary(interaction.regression)
 
 apa.reg.table(interaction.regression)
+
+apa.reg.table(interaction.regression, filename="Table2_Regression.doc", table.number=2)
 
 ##BLOCK APPROACH 
 #most people use a different approach 
@@ -79,6 +84,7 @@ summary(simple.slope.plus1SD)
 
 apa.reg.table(simple.slope.plus1SD)
 
+
 #1 SD below the mean 
 
 analytic.data <- analytic.data %>% mutate(z.centered.minus1SD = z.centered + sd.z)
@@ -98,9 +104,9 @@ apa.reg.table(simple.slope.minus1SD)
 
 sd.x <- sd(analytic.data$x.centered, na.rm=TRUE)
 
-#graph from range of 2SD +- 
+#graph only the data within +1 and -1 sd 
 
-x.axis.range <- seq(-2*sd.x, 2*sd.x, by=.25*sd.x)
+x.axis.range <- seq(-1*sd.x, 1*sd.x, by=.25*sd.x)
 
 #we want two lines - one for high and one for low preparation (moderator)
 
@@ -144,63 +150,50 @@ my.plot <- my.plot + theme_classic()
 my.plot <- my.plot + theme(axis.line.x = element_line(colour='black',size=0.5, linetype='solid'),
                            axis.line.y = element_line(colour='black',size=0.5, linetype='solid'))
 
+#adjust the axis 
+my.plot <- my.plot + coord_cartesian(xlim=c(-2,2),ylim=c(0,100))
+
 print(my.plot)
 
 #label the lines 
 
 my.plot <- my.plot+annotate("text", x= - 1, y = 68.5, label = "+1 SD Preparation")
-my.plot <- my.plot+annotate("text", x= - 1, y = 43.5, label = "-1 SD Preparation")
-
-
+my.plot <- my.plot+annotate("text", x= .9, y = 25, label = "-1 SD Preparation")
 #?annotate
 
+#label the axis
+my.plot <- my.plot + labs(x="Anxiety (mean centered)", y="Exam Grade")
+
+
 print(my.plot)
+
+#SAVE PLOT WITH THE EXPORT FUNCTION AND INSERT INTO WORD
 
 ##3D Graph 
 
 summary(interaction.regression)
+apa.reg.table(interaction.regression)
 
 #review intercept = 55.58 and all b-weights and sub in --- looking at 2 SD range like you did with 2d graph 
 
 library(MBESS)
 
-intr.plot(b.0=55.5794, b.x=-2.1503, b.z=4.5648, b.xz=0.9077,
-          x.min=-2*sd.x, x.max=2*sd.x, z.min=-2*sd.z, z.max=2*sd.z)
-
 #make the plot square (expand=1)
-
-intr.plot(b.0=55.5794, b.x=-2.1503, b.z=4.5648, b.xz=0.9077,
-          x.min=-2*sd.x, x.max=2*sd.x, z.min=-2*sd.z, z.max=2*sd.z, expand=1)
-
 #set the angle (hor.angle=#)
 #make plot gray scale
-
-intr.plot(b.0=55.5794, b.x=-2.1503, b.z=4.5648, b.xz=0.9077,
-          x.min=-2*sd.x, x.max=2*sd.x, z.min=-2*sd.z, z.max=2*sd.z, expand=1, 
-          hor.angle = 60, gray.scale=TRUE)
-
-
 #add axis labels (xlab, zlab, ylab)
-
-
-intr.plot(b.0=55.5794, b.x=-2.1503, b.z=4.5648, b.xz=0.9077,
-          x.min=-2*sd.x, x.max=2*sd.x, z.min=-2*sd.z, z.max=2*sd.z, 
-          
-          xlab="Anxiety Centered", zlab="Preparation Centered", ylab="Exam Score",
-          
-          expand=1, hor.angle = 60, gray.scale=TRUE)
-
 #refer to y-axis(exam scores) as the z-axis so you can change the range from 0 to 100 (its just a bug)
 #make the regression line width a certain size 
 
-intr.plot(b.0=55.5794, b.x=-2.1503, b.z=4.5648, b.xz=0.9077,
+intr.plot(b.0=47.05, b.x=15.01, b.z=9.45, b.xz=22.61,
           x.min=-2*sd.x, x.max=2*sd.x, z.min=-2*sd.z, z.max=2*sd.z, 
           
-          xlab="Anxiety Centered", zlab="Preparation Centered", ylab="Exam Score",
+          xlab="Anxiety (mean centered)", zlab="Preparation (mean centered)", ylab="Exam Grade",
           
           expand=1, hor.angle = 60, gray.scale=TRUE,
           
           line.wd = 4, zlim=c(0,100))
 
 ##SAVE THE GRAPH ---- export as pdf (side bar)
+
 
